@@ -1,6 +1,7 @@
 package com.example.stickyheaderrecyclerview
 
 import android.graphics.Canvas
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,7 +9,9 @@ import androidx.recyclerview.widget.RecyclerView
 
 class StickyHeaderItemDecoration(private val mListener: StickyHeaderInterface) :
     RecyclerView.ItemDecoration() {
+
     private var mStickyHeaderHeight: Int = 0
+    private var firstHeaderPosition: Int = -1
 
     override fun onDrawOver(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
         super.onDrawOver(c, parent, state)
@@ -19,18 +22,32 @@ class StickyHeaderItemDecoration(private val mListener: StickyHeaderInterface) :
         }
 
         val headerPos = mListener.getHeaderPositionForItem(topChildPosition)
-        if(headerPos != 0 ) return
+        Log.d("TAGGG", "headerPos $headerPos")
+//        if (headerPos != 0) return
         val currentHeader = getHeaderViewForItem(headerPos, parent)
         fixLayoutSize(parent, currentHeader)
         val contactPoint = currentHeader.bottom
         val childInContact = getChildInContact(parent, contactPoint, headerPos)
 
-        if (childInContact != null && mListener.isHeader(parent.getChildAdapterPosition(childInContact))) {
-            moveHeader(c, currentHeader, childInContact)
-            return
+
+        if (firstHeaderPosition == -1) {
+            firstHeaderPosition = getFirstHeaderPositionInRecyclerView(parent) - 1
+            Log.d("TAGGG", "firstHeaderPosition $firstHeaderPosition")
         }
 
-        drawHeader(c, currentHeader)
+        if (childInContact != null) {
+            val childAdapterPosition = parent.getChildAdapterPosition(childInContact)
+            Log.d("TAGGG", "childInContactPosition $childAdapterPosition")
+            val header = mListener.isHeader(childAdapterPosition)
+            if (header && headerPos >= firstHeaderPosition) {
+                moveHeader(c, currentHeader, childInContact)
+                return
+            }
+        }
+
+        if (headerPos > firstHeaderPosition) {
+            drawHeader(c, currentHeader)
+        }
     }
 
     private fun getHeaderViewForItem(headerPosition: Int, parent: RecyclerView): View {
@@ -45,6 +62,7 @@ class StickyHeaderItemDecoration(private val mListener: StickyHeaderInterface) :
     }
 
     private fun drawHeader(c: Canvas, header: View) {
+        Log.d("TAGGG", "drawHeader")
         c.save()
         c.translate(0f, 0f)
         header.draw(c)
@@ -52,10 +70,22 @@ class StickyHeaderItemDecoration(private val mListener: StickyHeaderInterface) :
     }
 
     private fun moveHeader(c: Canvas, currentHeader: View, nextHeader: View) {
+        Log.d("TAGGG", "moveHeader")
         c.save()
         c.translate(0f, nextHeader.top.toFloat() - currentHeader.height.toFloat())
         currentHeader.draw(c)
         c.restore()
+    }
+
+    private fun getFirstHeaderPositionInRecyclerView(parent: RecyclerView): Int {
+        var firstHeaderPos: Int = -1
+        for (i in 0 until parent.childCount) {
+            if(mListener.isHeader(parent.getChildAdapterPosition(parent.getChildAt(i)))) {
+                firstHeaderPos = i
+                break
+            }
+        }
+        return firstHeaderPos
     }
 
     private fun getChildInContact(
@@ -77,11 +107,10 @@ class StickyHeaderItemDecoration(private val mListener: StickyHeaderInterface) :
             }
 
             //add heightTolerance if child top be in display area
-            val childBottomPosition: Int
-            if (child.top > 0) {
-                childBottomPosition = child.bottom + heightTolerance
+            val childBottomPosition = if (child.top > 0) {
+                child.bottom + heightTolerance
             } else {
-                childBottomPosition = child.bottom
+                child.bottom
             }
 
             if (childBottomPosition > contactPoint) {
@@ -94,7 +123,6 @@ class StickyHeaderItemDecoration(private val mListener: StickyHeaderInterface) :
         }
         return childInContact
     }
-
 
     /**
      * Properly measures and layouts the top sticky header.

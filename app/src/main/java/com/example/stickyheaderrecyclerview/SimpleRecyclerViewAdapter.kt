@@ -1,15 +1,15 @@
 package com.example.stickyheaderrecyclerview
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.recyclerview.widget.RecyclerView
-import android.widget.TextView
 
 
-
-class SimpleRecyclerView : RecyclerView.Adapter<RecyclerView.ViewHolder>(),
+class SimpleRecyclerViewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>(),
     StickyHeaderItemDecoration.StickyHeaderInterface {
     private var mData = ArrayList<ViewHolder.Data>()
 
@@ -82,6 +82,7 @@ class SimpleRecyclerView : RecyclerView.Adapter<RecyclerView.ViewHolder>(),
 
     override fun getHeaderPositionForItem(itemPosition: Int): Int {
         var itPos = itemPosition
+        Log.d("TAGGG", "get header Position - $itPos")
         var headerPosition = 0
         do {
             if (this.isHeader(itPos)) {
@@ -101,6 +102,10 @@ class SimpleRecyclerView : RecyclerView.Adapter<RecyclerView.ViewHolder>(),
         val tv = header.findViewById<AppCompatTextView>(R.id.header)
 
         tv.text = (headerPosition / 5).toString()
+        tv.setOnClickListener {
+            Toast.makeText(it.context, "header click ${tv.text}", Toast.LENGTH_SHORT)
+                .show()
+        }
     }
 
     override fun isHeader(itemPosition: Int): Boolean {
@@ -109,21 +114,20 @@ class SimpleRecyclerView : RecyclerView.Adapter<RecyclerView.ViewHolder>(),
 
     class HeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private var tvHeader: AppCompatTextView = itemView.findViewById(R.id.header)
-
         fun bindData(position: Int) {
-            tvHeader.text = (position / 5).toString()
+            tvHeader.text = (position).toString()
+            tvHeader.setOnClickListener {
+                Toast.makeText(it.context, "header click ${tvHeader.text}", Toast.LENGTH_SHORT)
+                    .show()
+            }
         }
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
         var tvRows: AppCompatTextView = itemView.findViewById(R.id.text)
-
-
         fun bindData(position: Int) {
             tvRows.text = "saber  $position"
         }
-
         class Data(viewType: Int) {
             private var viewType: Int = 0
 
@@ -140,5 +144,4 @@ class SimpleRecyclerView : RecyclerView.Adapter<RecyclerView.ViewHolder>(),
             }
         }
     }
-
 }
