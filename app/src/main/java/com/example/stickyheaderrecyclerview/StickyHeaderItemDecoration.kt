@@ -15,11 +15,14 @@ class StickyHeaderItemDecoration(private val mListener: StickyHeaderInterface) :
 
     override fun onDrawOver(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
         super.onDrawOver(c, parent, state)
+
         val topChild = parent.getChildAt(0) ?: return
+
+
         val topChildPosition = parent.getChildAdapterPosition(topChild)
-        if (topChildPosition == RecyclerView.NO_POSITION) {
-            return
-        }
+
+        Log.d("TAGGG", "top child pos - ${topChildPosition}")
+        if (topChildPosition == RecyclerView.NO_POSITION) return
 
         val headerPos = mListener.getHeaderPositionForItem(topChildPosition)
         Log.d("TAGGG", "headerPos $headerPos")
